@@ -15,7 +15,7 @@ public class PreferencesImpl extends AbstractPreferences {
 
 	protected PreferencesImpl() {
 		super(null, "");
-		logger.debug("PreferencesImpl()");
+		logger.trace("PreferencesImpl()");
 		backend = HieraBackend.instance();
 	}
 

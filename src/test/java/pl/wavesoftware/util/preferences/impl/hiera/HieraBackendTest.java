@@ -4,10 +4,12 @@
  */
 package pl.wavesoftware.util.preferences.impl.hiera;
 
+import java.io.IOException;
 import java.util.prefs.BackingStoreException;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import static org.hamcrest.Matchers.*;
 
 /**
  *
@@ -29,8 +31,17 @@ public class HieraBackendTest {
 		String defaultValue = "val2";
 		HieraBackend instance = HieraBackend.instance();
 		String expResult = "val2";
-		String result = instance.get(key, defaultValue);
-		assertEquals(expResult, result);
+		try {
+			String result = instance.get(key, defaultValue);
+			assertEquals(expResult, result);
+			// if hiera is installed
+		} catch (BackingStoreException bse) {
+			if (bse.getCause() instanceof IOException) {
+				assertThat(bse.getCause().getLocalizedMessage(), containsString("\"hiera\""));
+			} else {
+				assertThat(bse.getCause(), is(instanceOf(InterruptedException.class)));
+			}
+		}
 	}
 
 	/**

@@ -13,7 +13,7 @@ public class PreferencesFactoryImpl implements PreferencesFactory {
 
 	@Override
 	public Preferences systemRoot() {
-		logger.debug("systemRoot()");
+		logger.trace("systemRoot()");
 
 		if (rootPreferences == null) {
 			rootPreferences = new PreferencesImpl();
@@ -24,7 +24,7 @@ public class PreferencesFactoryImpl implements PreferencesFactory {
 
 	@Override
 	public Preferences userRoot() {
-		logger.debug("userRoot()");
+		logger.trace("userRoot()");
 		return systemRoot();
 	}
 
