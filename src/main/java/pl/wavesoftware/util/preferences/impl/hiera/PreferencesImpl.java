@@ -1,6 +1,5 @@
 package pl.wavesoftware.util.preferences.impl.hiera;
 
-import java.util.logging.Level;
 import java.util.prefs.AbstractPreferences;
 import java.util.prefs.BackingStoreException;
 import org.slf4j.Logger;
@@ -17,7 +16,7 @@ public class PreferencesImpl extends AbstractPreferences {
 	protected PreferencesImpl() {
 		super(null, "");
 		logger.debug("PreferencesImpl()");
-		backend = new HieraBackend();
+		backend = HieraBackend.instance();
 	}
 
 	@Override

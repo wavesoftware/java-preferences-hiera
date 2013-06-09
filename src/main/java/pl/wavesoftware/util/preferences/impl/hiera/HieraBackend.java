@@ -7,7 +7,28 @@ import java.util.prefs.BackingStoreException;
 
 public class HieraBackend {
 
-	protected ProcessRunner runner = new ProcessRunner() {
+	private static HieraBackend inst;
+
+	public static HieraBackend instance() {
+		if (inst == null) {
+			inst = new HieraBackend();
+		}
+		return inst;
+	}
+
+	public static void clearInstance() {
+		inst = null;
+	}
+
+	protected HieraBackend() {
+	}
+
+	@Override
+	protected Object clone() throws CloneNotSupportedException {
+		throw new CloneNotSupportedException();
+	}
+
+	ProcessRunner runner = new ProcessRunner() {
 		public String run(String command) throws IllegalArgumentException, BackingStoreException {
 			StringBuilder sb = new StringBuilder();
 			String s;

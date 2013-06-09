@@ -3,13 +3,18 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>pl.wavesoftware</groupId>
-	<artifactId>preferences.hiera</artifactId>
+	<artifactId>preferences-hiera</artifactId>
 	<version>0.1.0-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
 	<name>Hiera Preferences Backend</name>
 	<description>Java Preferences API backend for Puppetlabs Hiera</description>
 	<url>https://github.com/wavesoftware/java-preferences-hiera</url>
+
+	<issueManagement>
+		<system>Github</system>
+		<url>https://github.com/wavesoftware/java-preferences-hiera/issues</url>
+	</issueManagement>
 
 	<scm>
 		<connection>git://github.com/wavesoftware/java-preferences-hiera.git</connection>
@@ -27,6 +32,21 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>2.14.1</version>
+				<configuration>
+					<systemPropertyVariables>
+						<java.util.prefs.PreferencesFactory>pl.wavesoftware.util.preferences.impl.hiera.PreferencesFactoryImpl</java.util.prefs.PreferencesFactory>
+					</systemPropertyVariables>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 
 	<dependencies>
 		<dependency>

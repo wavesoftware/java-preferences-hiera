@@ -15,6 +15,11 @@ import static org.junit.Assert.*;
  */
 public class HieraBackendTest {
 
+	@Before
+	public void beforeTest() {
+		HieraBackend.clearInstance();
+	}
+
 	/**
 	 * Test of get method, of class HieraBackend.
 	 */
@@ -22,7 +27,7 @@ public class HieraBackendTest {
 	public void testGet_String_String() throws Exception {
 		String key = "samplekey";
 		String defaultValue = "val2";
-		HieraBackend instance = new HieraBackend();
+		HieraBackend instance = HieraBackend.instance();
 		String expResult = "val2";
 		String result = instance.get(key, defaultValue);
 		assertEquals(expResult, result);
