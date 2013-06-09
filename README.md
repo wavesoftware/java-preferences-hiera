@@ -20,7 +20,7 @@ With maven dependency:
 
 Download jar:
 
-dd
+https://bitbucket.org/wavesoftware/java-preferences-hiera/downloads/preferences-hiera-0.1.0.jar
 
 Usage
 -----
