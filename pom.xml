@@ -31,9 +31,9 @@
 	</licenses>
 
 	<scm>
-		<connection>scm:git:git://github.com/wavesoftware/java-preferences-hiera.git</connection>
-		<developerConnection>scm:git:git://github.com/wavesoftware/java-preferences-hiera.git</developerConnection>
-		<url>git://github.com/wavesoftware/java-preferences-hiera.git</url>
+		<connection>scm:git:git@github.com:wavesoftware/java-preferences-hiera.git</connection>
+		<developerConnection>scm:git:git@github.com:wavesoftware/java-preferences-hiera.git</developerConnection>
+		<url>git@github.com:wavesoftware/java-preferences-hiera.git</url>
 	</scm>
 
 	<developers>
