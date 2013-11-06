@@ -56,15 +56,16 @@ public class HieraBackendTest {
 		assertEquals(expResult, result);
 	}
 
-	private class HieraBackendMock extends HieraBackend {
+    private static final class HieraBackendMock extends HieraBackend {
 
-		public HieraBackendMock() {
-			super();
-			runner = new ProcessRunner() {
-				public String run(String command) throws IllegalArgumentException, BackingStoreException {
-					return "false";
-				}
-			};
-		}
-	}
+        public HieraBackendMock() {
+            runner = new CliRunner() {
+
+                @Override
+                public String run(String command) throws KeyNotFoundException, BackingStoreException {
+                    return "false";
+                }
+            };
+        }
+    }
 }

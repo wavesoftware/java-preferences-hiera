@@ -55,7 +55,7 @@
 				<version>2.14.1</version>
 				<configuration>
 					<systemPropertyVariables>
-						<java.util.prefs.PreferencesFactory>pl.wavesoftware.util.preferences.impl.hiera.PreferencesFactoryImpl</java.util.prefs.PreferencesFactory>
+                        <java.util.prefs.PreferencesFactory>pl.wavesoftware.util.preferences.impl.hiera.HieraPreferencesFactory</java.util.prefs.PreferencesFactory>
 					</systemPropertyVariables>
 				</configuration>
 			</plugin>
