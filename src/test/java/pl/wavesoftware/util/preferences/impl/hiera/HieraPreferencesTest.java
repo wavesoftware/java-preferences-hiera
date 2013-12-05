@@ -5,9 +5,12 @@
 package pl.wavesoftware.util.preferences.impl.hiera;
 
 import java.util.prefs.AbstractPreferences;
-import org.junit.Before;
+import java.util.prefs.BackingStoreException;
+import org.hamcrest.Matchers;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -36,6 +39,37 @@ public class HieraPreferencesTest {
 		String expResult = null;
 		String result = instance.getSpi(key);
 		assertEquals(expResult, result);
+	}
+
+	@Test
+	public void testGetSpiWithException() {
+		String key = "samplekey";
+		String expResult = null;
+		String oldExec = HieraBackend.instance().getExecutable();
+		String command = "not-existent-command-gcd2udiuy3ugd2fgyi823f";
+		HieraBackend.instance().setExecutable(command);
+		HieraPreferences instance = new HieraPreferences();
+		String result = instance.getSpi(key);
+		HieraBackend.instance().setExecutable(oldExec);
+		assertEquals(expResult, result);
+		BackingStoreException ex = instance.getLastException();
+		assertNotNull(ex);
+		assertThat(ex.getLocalizedMessage(), Matchers.containsString(command));
+	}
+
+	@Test
+	public void testGetSpiWithException2() {
+		String key = "samplekey";
+		String expResult = null;
+		String oldExec = HieraBackend.instance().getExecutable();
+		String command = "bash -c 'exit 5' #";
+		HieraBackend.instance().setExecutable(command);
+		HieraPreferences instance = new HieraPreferences();
+		String result = instance.getSpi(key);
+		HieraBackend.instance().setExecutable(oldExec);
+		assertEquals(expResult, result);
+		BackingStoreException ex = instance.getLastException();
+		assertNull(ex);
 	}
 
 	/**

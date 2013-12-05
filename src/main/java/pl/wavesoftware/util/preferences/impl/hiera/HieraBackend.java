@@ -17,7 +17,9 @@ public class HieraBackend {
 
     protected transient CliRunner runner;
 
-    private transient boolean disabled = false;
+	private transient boolean disabled = false;
+
+	private String executable = "hiera";
 
     /**
      * Instance method
@@ -31,7 +33,25 @@ public class HieraBackend {
             }
             return inst;
         }
-    }
+	}
+
+	/**
+	 * Gets executable name
+	 *
+	 * @return executable name
+	 */
+	public String getExecutable() {
+		return executable;
+	}
+
+	/**
+	 * Sets executable name
+	 *
+	 * @param executable name of the executable
+	 */
+	public void setExecutable(final String executable) {
+		this.executable = executable;
+	}
 
     /**
      * Clears instance
@@ -55,12 +75,14 @@ public class HieraBackend {
      * @return founded value
      * @throws BackingStoreException thrown if error occurd
      */
-    public String get(final String key, final String defaultValue) throws BackingStoreException {
+	public String get(final String key, final String defaultValue) throws BackingStoreException {
+		String ret;
         try {
-            return get(key);
+			ret = get(key);
         } catch (KeyNotFoundException ex) {
-            return defaultValue;
-        }
+			ret = defaultValue;
+		}
+		return ret;
     }
 
     /**
@@ -72,7 +94,7 @@ public class HieraBackend {
      * @throws KeyNotFoundException thrown if key is not found
      */
     public String get(final String key) throws BackingStoreException, KeyNotFoundException {
-        final String ret = runner.run("hiera " + key).trim();
+		final String ret = runner.run(executable + " " + key).trim();
         if ("nil".equals(ret)) {
             throw new KeyNotFoundException();
         }
@@ -124,6 +146,8 @@ public class HieraBackend {
      * Key is not found
      */
     public static final class KeyNotFoundException extends Exception {
+
+		private static final long serialVersionUID = 1L;
 
         /**
          * Default constr

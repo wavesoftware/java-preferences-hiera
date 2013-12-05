@@ -14,14 +14,15 @@ public class HieraPreferences extends AbstractPreferences {
     /**
      * Logger for this class
      */
-    private static final Logger LOG = LoggerFactory.getLogger(HieraPreferences.class);
+	private static final Logger LOG = LoggerFactory.getLogger(HieraPreferences.class);
 
     private final transient HieraBackend backend;
 
     private static final String NOT_SUPPORTED = "Not supported by Hiera.";
 
-    /**
-     * Default constructor
+	private BackingStoreException lastException;
+
+	/**     * Default constructor
      */
     protected HieraPreferences() {
         super(null, "");
@@ -32,13 +33,18 @@ public class HieraPreferences extends AbstractPreferences {
     @Override
     protected void putSpi(final String key, final String value) {
         throw new UnsupportedOperationException(NOT_SUPPORTED);
-    }
+	}
+
+	protected BackingStoreException getLastException() {
+		return lastException;
+	}
 
     @Override
     protected String getSpi(final String key) {
-        try {
+		try {
             return backend.get(key, null);
-        } catch (BackingStoreException ex) {
+		} catch (BackingStoreException ex) {
+			lastException = ex;
             LOG.error("Hiera error", ex);
             return null;
         }
