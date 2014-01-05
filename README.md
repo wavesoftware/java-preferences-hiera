@@ -14,20 +14,20 @@ With maven dependency:
 <dependency>
 	<groupId>pl.wavesoftware</groupId>
 	<artifactId>preferences-hiera</artifactId>
-	<version>0.1.0</version>
+	<version>0.2.0</version>
 </dependency>
 ```
 
 Download jar:
 
-https://bitbucket.org/wavesoftware/java-preferences-hiera/downloads/preferences-hiera-0.1.0.jar
+https://bitbucket.org/wavesoftware/java-preferences-hiera/downloads/preferences-hiera-0.2.0.jar
 
 Usage
 -----
 
 ```java
 // Set system properties as soon as you can
-System.setProperty("java.util.prefs.PreferencesFactory", PreferencesFactoryImpl.class.getName());
+HieraPreferencesFactory.activate();
 Preferences prefs = Preferences.systemRoot();
 boolean production = prefs.getBoolean("production", false);
 ```
