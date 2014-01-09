@@ -18,10 +18,6 @@ With maven dependency:
 </dependency>
 ```
 
-Download jar:
-
-https://bitbucket.org/wavesoftware/java-preferences-hiera/downloads/preferences-hiera-0.2.0.jar
-
 Usage
 -----
 
@@ -31,3 +27,21 @@ HieraPreferencesFactory.activate();
 Preferences prefs = Preferences.systemRoot();
 boolean production = prefs.getBoolean("production", false);
 ```
+
+Changelog
+---------
+
+* v0.3.0
+
+- Caching
+- Bugfixes
+
+* v0.2.0
+
+- Major rewrite
+- More test
+- CI support
+
+* v0.1.0
+
+- First version
