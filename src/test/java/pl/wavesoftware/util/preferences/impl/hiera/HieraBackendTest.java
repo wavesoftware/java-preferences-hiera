@@ -5,6 +5,7 @@
 package pl.wavesoftware.util.preferences.impl.hiera;
 
 import java.io.IOException;
+import java.util.concurrent.ExecutionException;
 import java.util.prefs.BackingStoreException;
 import org.junit.Before;
 import org.junit.Test;
@@ -40,7 +41,7 @@ public class HieraBackendTest {
             if (bse.getCause() instanceof IOException) {
                 assertThat(bse.getCause().getLocalizedMessage(), containsString("\"hiera\""));
             } else {
-                assertThat(bse.getCause(), is(instanceOf(InterruptedException.class)));
+                assertThat(bse.getCause(), is(instanceOf(ExecutionException.class)));
             }
         }
     }

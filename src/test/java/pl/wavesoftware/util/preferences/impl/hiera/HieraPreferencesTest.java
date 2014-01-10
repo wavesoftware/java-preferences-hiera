@@ -6,6 +6,7 @@ package pl.wavesoftware.util.preferences.impl.hiera;
 
 import java.util.prefs.AbstractPreferences;
 import java.util.prefs.BackingStoreException;
+import org.junit.Before;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -15,6 +16,11 @@ import static org.junit.Assert.*;
  * @author Krzysztof Suszyński <krzysztof.suszynski@wavesoftware.pl>
  */
 public class HieraPreferencesTest {
+
+    @Before
+    public void before() {
+        HieraBackend.clearInstance();
+    }
 
     /**
      * Test of putSpi method, of class HieraPreferences.
@@ -44,7 +50,7 @@ public class HieraPreferencesTest {
         String key = "samplekey";
         String expResult = null;
         String oldExec = HieraBackend.instance().getExecutable();
-        String command = "not-existent-command";
+        String command = "not-existent-command %s";
         HieraBackend.instance().setExecutable(command);
         HieraPreferences instance = new HieraPreferences();
         String result = instance.getSpi(key);

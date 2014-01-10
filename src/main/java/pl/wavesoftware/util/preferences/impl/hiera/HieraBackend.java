@@ -128,6 +128,10 @@ public class HieraBackend {
         try {
             ret = cache.get(key);
         } catch (ExecutionException ex) {
+            Throwable cause = ex.getCause();
+            if (cause instanceof KeyNotFoundException) {
+                throw (KeyNotFoundException) cause;
+            }
             throw new BackingStoreException(ex);
         }
         if ("nil".equals(ret)) {
