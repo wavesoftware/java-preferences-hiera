@@ -10,6 +10,7 @@ import java.util.prefs.PreferencesFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import pl.wavesoftware.util.preferences.impl.hiera.HieraPreferences.Order;
 
 import static org.junit.Assert.*;
 
@@ -81,6 +82,19 @@ public class HieraPreferencesTest {
     @Test
     public void testGetSpi() {
         String key = "samplekey";
+        HieraPreferences instance = newInstance();
+        String expResult = null;
+        String result = instance.getSpi(key);
+        assertEquals(expResult, result);
+    }
+
+    /**
+     * Test of getSpi method, of class HieraPreferences.
+     */
+    @Test
+    public void testGetSpiDiffrentOrder() {
+        String key = "sample-non-existing-key";
+        HieraPreferencesFactory.setDefaultOrder(Order.DEFAULT_PREFS_OVERWRITES);
         HieraPreferences instance = newInstance();
         String expResult = null;
         String result = instance.getSpi(key);

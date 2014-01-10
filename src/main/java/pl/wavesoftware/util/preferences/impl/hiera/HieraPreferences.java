@@ -167,6 +167,6 @@ public class HieraPreferences extends AbstractPreferences {
      */
     public enum Order {
 
-        HIERA_OVERWRITES, PREFS_OVERWRITES
+        HIERA_OVERWRITES, DEFAULT_PREFS_OVERWRITES
     }
 }

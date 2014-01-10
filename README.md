@@ -14,7 +14,7 @@ With maven dependency:
 <dependency>
     <groupId>pl.wavesoftware</groupId>
 	<artifactId>preferences-hiera</artifactId>
-	<version>0.2.0</version>
+	<version>0.3.0</version>
 </dependency>
 ```
 
