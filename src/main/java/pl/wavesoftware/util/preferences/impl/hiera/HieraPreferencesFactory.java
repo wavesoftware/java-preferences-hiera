@@ -5,6 +5,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.prefs.Preferences;
 import java.util.prefs.PreferencesFactory;
+import pl.wavesoftware.util.preferences.impl.hiera.HieraPreferences.Order;
 
 /**
  * Pupper hiera preferences factory implementation
@@ -13,9 +14,11 @@ import java.util.prefs.PreferencesFactory;
  */
 public class HieraPreferencesFactory implements PreferencesFactory {
 
-    private transient Preferences rootPreferences;
+    private transient HieraPreferences hieraPrefs;
 
     private static final String PROP = "java.util.prefs.PreferencesFactory";
+
+    private static Order order = Order.HIERA_OVERWRITES;
 
     /**
      * Gets a default JAVA Preferences factory
@@ -53,7 +56,7 @@ public class HieraPreferencesFactory implements PreferencesFactory {
      * Sets Hiera prefs as default for system
      */
     public static void activate() {
-        if (!isSet()) {
+        if (!isActivated()) {
             System.setProperty(PROP, HieraPreferencesFactory.class.getName());
             try {
                 Field factoryField = Preferences.class.getDeclaredField("factory");
@@ -68,7 +71,7 @@ public class HieraPreferencesFactory implements PreferencesFactory {
      * Restores orginal Preference factory
      */
     public static void restore() {
-        if (isSet()) {
+        if (isActivated()) {
             try {
                 System.clearProperty(PROP);
                 PreferencesFactory defaultFactory = HieraPreferencesFactory.getDefaultJavaFactory();
@@ -101,21 +104,57 @@ public class HieraPreferencesFactory implements PreferencesFactory {
         field.setAccessible(false);
     }
 
-    private static boolean isSet() {
+    /**
+     * Checks is Hiera preferences is set as current default preferences factory
+     *
+     * @return true if is set as current
+     */
+    public static boolean isActivated() {
         return HieraPreferencesFactory.class.getName().equals(System.getProperty(PROP));
+    }
+
+    /**
+     * Gets Hiera preferences
+     *
+     * @return Hiera preferences
+     */
+    private HieraPreferences getHieraPreferences() {
+        if (hieraPrefs == null) {
+            hieraPrefs = new HieraPreferences();
+        }
+        return hieraPrefs;
+    }
+
+    /**
+     * Gets current order of operation
+     *
+     * @return an order
+     */
+    public static Order getDefaultOrder() {
+        return order;
+    }
+
+    /**
+     * Sets order of operations
+     *
+     * @param order desired order
+     */
+    public static void setDefaultOrder(Order order) {
+        HieraPreferencesFactory.order = order;
     }
 
     @Override
     public Preferences systemRoot() {
-        if (rootPreferences == null) {
-            rootPreferences = new HieraPreferences();
-        }
-        return rootPreferences;
+        HieraPreferences prefs = getHieraPreferences();
+        prefs.setSystemDefaultPreferences(getDefaultJavaFactory().systemRoot());
+        return prefs;
     }
 
     @Override
     public Preferences userRoot() {
-        return systemRoot();
+        HieraPreferences prefs = getHieraPreferences();
+        prefs.setSystemDefaultPreferences(getDefaultJavaFactory().userRoot());
+        return prefs;
     }
 
 }

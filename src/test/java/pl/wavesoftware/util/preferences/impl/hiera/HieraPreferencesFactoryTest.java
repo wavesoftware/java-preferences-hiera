@@ -54,7 +54,7 @@ public class HieraPreferencesFactoryTest {
                 return "true";
             }
         };
-        final Preferences prefs = Preferences.systemRoot();
+        final Preferences prefs = Preferences.userRoot();
         final boolean production = prefs.getBoolean("production", false);
         HieraBackend.clearInstance();
         assertTrue("Production setting shuld be true", production);
@@ -75,7 +75,7 @@ public class HieraPreferencesFactoryTest {
                 return "true";
             }
         };
-        final Preferences prefs = Preferences.systemRoot();
+        final Preferences prefs = Preferences.userRoot();
         prefs.getBoolean("production", false);
         prefs.getBoolean("production", false);
         prefs.getBoolean("production", false);
@@ -92,7 +92,7 @@ public class HieraPreferencesFactoryTest {
     public void testDefaultProvider() throws BackingStoreException {
         testGlobal();
         HieraPreferencesFactory.restore();
-        final Preferences prefs = Preferences.systemRoot();
+        final Preferences prefs = Preferences.userRoot();
         String key = "key-" + UUID.randomUUID().toString().replace("-", "");
         String expected = "SomeString";
         String fetched = prefs.get(key, expected);

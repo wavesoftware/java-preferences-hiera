@@ -12,7 +12,7 @@ With maven dependency:
 
 ```xml
 <dependency>
-	<groupId>pl.wavesoftware</groupId>
+    <groupId>pl.wavesoftware</groupId>
 	<artifactId>preferences-hiera</artifactId>
 	<version>0.2.0</version>
 </dependency>
@@ -31,17 +31,18 @@ boolean production = prefs.getBoolean("production", false);
 Changelog
 ---------
 
-* v0.3.0
+#### v0.3.0 ####
 
-- Caching
+- Fallback to standard Java preferences for method not supported by hiera
+- Caching execution of hiera command line tool
 - Bugfixes
 
-* v0.2.0
+#### v0.2.0 ####
 
 - Major rewrite
 - More test
 - CI support
 
-* v0.1.0
+#### v0.1.0 ####
 
 - First version
