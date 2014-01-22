@@ -14,7 +14,7 @@ With maven dependency:
 <dependency>
     <groupId>pl.wavesoftware</groupId>
 	<artifactId>preferences-hiera</artifactId>
-	<version>0.3.0</version>
+	<version>0.3.1</version>
 </dependency>
 ```
 
@@ -30,6 +30,9 @@ boolean production = prefs.getBoolean("production", false);
 
 Changelog
 ---------
+
+#### v0.3.1 ####
+- Bug fixes for transient and miltithreaded maven build
 
 #### v0.3.0 ####
 
