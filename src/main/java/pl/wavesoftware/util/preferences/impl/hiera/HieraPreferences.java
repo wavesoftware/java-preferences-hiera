@@ -17,7 +17,7 @@ public class HieraPreferences extends AbstractPreferences {
      */
     private static final Logger LOG = LoggerFactory.getLogger(HieraPreferences.class);
 
-    private final transient HieraBackend backend;
+    private final HieraBackend backend;
 
     private static final String NOT_SUPPORTED = "Not supported by Hiera.";
 

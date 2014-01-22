@@ -24,9 +24,9 @@ public class HieraBackend {
 
     private TimeUnit cacheTimeUnit = TimeUnit.SECONDS;
 
-    protected transient CliRunner runner;
+    protected CliRunner runner;
 
-    private transient boolean disabled = false;
+    private boolean disabled = false;
 
     private String executable = "hiera %s";
 

@@ -1,23 +1,25 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package pl.wavesoftware.util.preferences.impl.hiera;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.UUID;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 import org.junit.After;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import org.junit.Test;
-
-import static org.junit.Assert.*;
 
 /**
  *
  * @author Krzysztof Suszyński <krzysztof.suszynski@wavesoftware.pl>
  */
-public class HieraPreferencesFactoryTest {
+public class HieraPreferencesFactoryTest implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     /**
      * Test of systemRoot method, of class HieraPreferencesFactory.
@@ -39,7 +41,7 @@ public class HieraPreferencesFactoryTest {
         assertNotNull("Result should be not null", result);
     }
 
-    private transient int runned = 0;
+    private int runned = 0;
 
     @Test
     public void testGlobal() {

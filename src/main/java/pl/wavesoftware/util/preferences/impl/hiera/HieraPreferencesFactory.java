@@ -14,7 +14,7 @@ import pl.wavesoftware.util.preferences.impl.hiera.HieraPreferences.Order;
  */
 public class HieraPreferencesFactory implements PreferencesFactory {
 
-    private transient HieraPreferences hieraPrefs;
+    private HieraPreferences hieraPrefs;
 
     private static final String PROP = "java.util.prefs.PreferencesFactory";
 
