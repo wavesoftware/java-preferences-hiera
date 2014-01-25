@@ -14,8 +14,6 @@ import pl.wavesoftware.util.preferences.impl.hiera.HieraPreferences.Order;
  */
 public class HieraPreferencesFactory implements PreferencesFactory {
 
-    private HieraPreferences hieraPrefs;
-
     private static final String PROP = "java.util.prefs.PreferencesFactory";
 
     private static Order order = Order.HIERA_OVERWRITES;
@@ -27,7 +25,7 @@ public class HieraPreferencesFactory implements PreferencesFactory {
      */
     public static PreferencesFactory getDefaultJavaFactory() {
         // Use platform-specific system-wide default
-        String osName = System.getProperty("os.name");
+        final String osName = System.getProperty("os.name");
         String platformFactory;
         if (osName.startsWith("Windows")) {
             platformFactory = "java.util.prefs.WindowsPreferencesFactory";
@@ -37,15 +35,14 @@ public class HieraPreferencesFactory implements PreferencesFactory {
             platformFactory = "java.util.prefs.FileSystemPreferencesFactory";
         }
         try {
-            Class<?> cls = Class.forName(platformFactory, false, null);
-            Constructor<?> constr = cls.getDeclaredConstructors()[0];
+            final Class<?> cls = Class.forName(platformFactory, false, null);
+            final Constructor<?> constr = cls.getDeclaredConstructors()[0];
             constr.setAccessible(true);
-            Object instance = constr.newInstance();
+            final Object instance = constr.newInstance();
             constr.setAccessible(false);
             return (PreferencesFactory) instance;
         } catch (Exception e) {
-            InternalError error = new InternalError(
-                    "Can't instantiate platform default Preferences factory "
+            final InternalError error = new InternalError("Can't instantiate platform default Preferences factory "
                     + platformFactory);
             error.initCause(e);
             throw error;
@@ -58,12 +55,7 @@ public class HieraPreferencesFactory implements PreferencesFactory {
     public static void activate() {
         if (!isActivated()) {
             System.setProperty(PROP, HieraPreferencesFactory.class.getName());
-            try {
-                Field factoryField = Preferences.class.getDeclaredField("factory");
-                setFinalStatic(factoryField, new HieraPreferencesFactory());
-            } catch (Exception ex) {
-                throw new RuntimeException(ex);
-            }
+            setFinalStaticField("factory", new HieraPreferencesFactory());
         }
     }
 
@@ -72,14 +64,46 @@ public class HieraPreferencesFactory implements PreferencesFactory {
      */
     public static void restore() {
         if (isActivated()) {
-            try {
-                System.clearProperty(PROP);
-                PreferencesFactory defaultFactory = HieraPreferencesFactory.getDefaultJavaFactory();
-                Field factoryField = Preferences.class.getDeclaredField("factory");
-                setFinalStatic(factoryField, defaultFactory);
-            } catch (Exception ex) {
-                throw new RuntimeException(ex);
-            }
+            System.clearProperty(PROP);
+            final PreferencesFactory defaultFactory = HieraPreferencesFactory.getDefaultJavaFactory();
+            setFinalStaticField("factory", defaultFactory);
+        }
+    }
+
+    /**
+     * Creates a Hiera preferences object for user's root
+     *
+     * @return Hiera preferences object
+     */
+    public static Preferences createUserRoot() {
+        final HieraPreferencesFactory factory = new HieraPreferencesFactory();
+        return factory.userRoot();
+    }
+
+    /**
+     * Creates a Hiera preferences object for system's root
+     *
+     * @return Hiera preferences object
+     */
+    public static Preferences createSystemRoot() {
+        final HieraPreferencesFactory factory = new HieraPreferencesFactory();
+        return factory.systemRoot();
+    }
+
+    /**
+     * Force to set private final static field in Java
+     *
+     * @param fieldName name of a field to be set
+     * @param newValue a new value of that field
+     */
+    private static void setFinalStaticField(final String fieldName, final Object newValue) {
+        try {
+            final Field factoryField = Preferences.class.getDeclaredField(fieldName);
+            setFinalStaticField(factoryField, newValue);
+        } catch (NoSuchFieldException ex) {
+            throw new DeveloperError(ex);
+        } catch (SecurityException ex) {
+            throw new DeveloperError(ex);
         }
     }
 
@@ -88,20 +112,29 @@ public class HieraPreferencesFactory implements PreferencesFactory {
      *
      * @param field field to be set
      * @param newValue a new value of that field
-     * @throws Exception if something is wrong
      */
-    private static void setFinalStatic(Field field, Object newValue) throws Exception {
-        field.setAccessible(true);
+    private static void setFinalStaticField(final Field field, final Object newValue) {
+        try {
+            field.setAccessible(true);
 
-        Field modifiersField = Field.class.getDeclaredField("modifiers");
-        modifiersField.setAccessible(true);
-        modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
+            final Field modifiersField = Field.class.getDeclaredField("modifiers");
+            modifiersField.setAccessible(true);
+            modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
 
-        field.set(null, newValue);
+            field.set(null, newValue);
 
-        modifiersField.setInt(field, field.getModifiers() & Modifier.FINAL);
-        modifiersField.setAccessible(false);
-        field.setAccessible(false);
+            modifiersField.setInt(field, field.getModifiers() & Modifier.FINAL);
+            modifiersField.setAccessible(false);
+            field.setAccessible(false);
+        } catch (NoSuchFieldException ex) {
+            throw new DeveloperError(ex);
+        } catch (SecurityException ex) {
+            throw new DeveloperError(ex);
+        } catch (IllegalArgumentException ex) {
+            throw new DeveloperError(ex);
+        } catch (IllegalAccessException ex) {
+            throw new DeveloperError(ex);
+        }
     }
 
     /**
@@ -119,10 +152,7 @@ public class HieraPreferencesFactory implements PreferencesFactory {
      * @return Hiera preferences
      */
     private HieraPreferences getHieraPreferences() {
-        if (hieraPrefs == null) {
-            hieraPrefs = new HieraPreferences();
-        }
-        return hieraPrefs;
+        return new HieraPreferences();
     }
 
     /**
@@ -139,20 +169,20 @@ public class HieraPreferencesFactory implements PreferencesFactory {
      *
      * @param order desired order
      */
-    public static void setDefaultOrder(Order order) {
+    public static void setDefaultOrder(final Order order) {
         HieraPreferencesFactory.order = order;
     }
 
     @Override
     public Preferences systemRoot() {
-        HieraPreferences prefs = getHieraPreferences();
+        final HieraPreferences prefs = getHieraPreferences();
         prefs.setSystemDefaultPreferences(getDefaultJavaFactory().systemRoot());
         return prefs;
     }
 
     @Override
     public Preferences userRoot() {
-        HieraPreferences prefs = getHieraPreferences();
+        final HieraPreferences prefs = getHieraPreferences();
         prefs.setSystemDefaultPreferences(getDefaultJavaFactory().userRoot());
         return prefs;
     }

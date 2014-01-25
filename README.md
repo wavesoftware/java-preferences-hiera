@@ -14,22 +14,35 @@ With maven dependency:
 <dependency>
     <groupId>pl.wavesoftware</groupId>
 	<artifactId>preferences-hiera</artifactId>
-	<version>0.3.1</version>
+	<version>0.3.2</version>
 </dependency>
 ```
 
 Usage
 -----
 
+If using as a plugin into Application Server or standalone application set system properties as soon as you can:
 ```java
-// Set system properties as soon as you can
+// Inside a plugin
 HieraPreferencesFactory.activate();
-Preferences prefs = Preferences.systemRoot();
+
+// Aplications use default Java syntax
+Preferences prefs = Preferences.userRoot();
+boolean production = prefs.getBoolean("production", false);
+```
+
+If using hiera preferences inside a Java EE Application user rather direct aproch:
+```java
+Preferences prefs = HieraPreferencesFactory.createUserRoot();
 boolean production = prefs.getBoolean("production", false);
 ```
 
 Changelog
 ---------
+
+#### v0.3.2 ####
+
+- more bug fixes
 
 #### v0.3.1 ####
 - Bug fixes for transient and miltithreaded maven build

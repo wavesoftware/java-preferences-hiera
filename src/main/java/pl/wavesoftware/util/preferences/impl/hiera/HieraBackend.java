@@ -3,9 +3,7 @@ package pl.wavesoftware.util.preferences.impl.hiera;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Scanner;
+import java.io.Serializable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.prefs.BackingStoreException;
@@ -14,15 +12,17 @@ import java.util.prefs.BackingStoreException;
  *
  * @author Krzysztof Suszyński <krzysztof.suszynski@wavesoftware.pl>
  */
-public class HieraBackend {
+public class HieraBackend implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private static HieraBackend inst;
 
     private static final Object LOCK = new Object();
 
-    private int cacheTime = 120;
+    private static final int CACHE_TIME = 120;
 
-    private TimeUnit cacheTimeUnit = TimeUnit.SECONDS;
+    private static final TimeUnit CACHE_TIME_UNIT = TimeUnit.SECONDS;
 
     protected CliRunner runner;
 
@@ -32,17 +32,63 @@ public class HieraBackend {
 
     private LoadingCache<String, String> cache;
 
-    public final void resetCache() {
+    protected boolean isDisabled() {
+        return disabled;
+    }
+
+    protected void setDisabled(final boolean disabled) {
+        this.disabled = disabled;
+    }
+
+    protected CliRunner getRunner() {
+        return runner;
+    }
+
+    protected void setRunner(final CliRunner runner) {
+        this.runner = runner;
+    }
+
+    protected final void setCache(final LoadingCache<String, String> cache) {
+        this.cache = cache;
+    }
+
+    private void cleanCache() {
         if (cache != null) {
             cache.invalidateAll();
         }
-        CacheLoader<String, String> loader = new CacheLoader<String, String>() {
-            @Override
-            public String load(String key) throws KeyNotFoundException, BackingStoreException {
-                return runRunnerForKey(key);
-            }
-        };
-        cache = CacheBuilder.newBuilder().expireAfterAccess(cacheTime, cacheTimeUnit).build(loader);
+        setCache(null);
+    }
+
+    /**
+     * Resets cache with default of 120sec. cache time
+     */
+    public final void resetCache() {
+        resetCache(CACHE_TIME, CACHE_TIME_UNIT);
+    }
+
+    /**
+     * Resets cache with given cache time
+     *
+     * @param cacheTime a new cache time
+     * @param cacheTimeUnit a cache time unit
+     */
+    public final void resetCache(final int cacheTime, final TimeUnit cacheTimeUnit) {
+        cleanCache();
+        cache = CacheBuilder.newBuilder().expireAfterAccess(cacheTime, cacheTimeUnit).build(
+                new CacheLoader<String, String>() {
+
+                    @Override
+                    public String load(final String key) throws KeyNotFoundException, BackingStoreException {
+                        return runRunnerForKey(key);
+                    }
+                });
+    }
+
+    private LoadingCache<String, String> getCache() {
+        if (cache == null) {
+            resetCache();
+        }
+        return cache;
     }
 
     /**
@@ -82,15 +128,15 @@ public class HieraBackend {
      */
     public static void clearInstance() {
         if (inst != null) {
-            inst.runner = new Runner();
+            inst.runner = new DefaultCommandLineRunner();
             inst.disabled = false;
-            inst.resetCache();
+            inst.cleanCache();
         }
     }
 
     protected HieraBackend() {
-        runner = new Runner();
-        resetCache();
+        runner = new DefaultCommandLineRunner();
+        cleanCache();
     }
 
     /**
@@ -102,16 +148,14 @@ public class HieraBackend {
      * @throws BackingStoreException thrown if error occurd
      */
     public String get(final String key, final String defaultValue) throws BackingStoreException {
-        String ret;
         try {
-            ret = get(key);
+            return get(key);
         } catch (KeyNotFoundException ex) {
-            ret = defaultValue;
+            return defaultValue;
         }
-        return ret;
     }
 
-    private String runRunnerForKey(String key) throws KeyNotFoundException, BackingStoreException {
+    private String runRunnerForKey(final String key) throws KeyNotFoundException, BackingStoreException {
         return runner.run(String.format(executable, key)).trim();
     }
 
@@ -124,82 +168,18 @@ public class HieraBackend {
      * @throws KeyNotFoundException thrown if key is not found
      */
     public String get(final String key) throws BackingStoreException, KeyNotFoundException {
-        final String ret;
         try {
-            ret = cache.get(key);
+            final String ret = getCache().get(key);
+            if (ret == null || "nil".equals(ret) || "null".equals(ret)) {
+                throw new KeyNotFoundException();
+            }
+            return ret;
         } catch (ExecutionException ex) {
-            Throwable cause = ex.getCause();
+            final Throwable cause = ex.getCause();
             if (cause instanceof KeyNotFoundException) {
                 throw (KeyNotFoundException) cause;
             }
             throw new BackingStoreException(ex);
         }
-        if ("nil".equals(ret)) {
-            throw new KeyNotFoundException();
-        }
-        return ret;
-    }
-
-    /**
-     * Cli runner
-     */
-    public interface CliRunner {
-
-        /**
-         * Runs command in CLI
-         *
-         * @param command to run at CLI
-         * @return Executed output STDOUT
-         * @throws KeyNotFoundException if key is not found
-         * @throws BackingStoreException if error occurd
-         */
-        String run(final String command) throws KeyNotFoundException, BackingStoreException;
-    }
-
-    protected static class Runner implements CliRunner {
-
-        @Override
-        public String run(final String command) throws KeyNotFoundException, BackingStoreException {
-            try {
-                final Process proc = Runtime.getRuntime().exec(command);
-                proc.waitFor();
-
-                if (proc.exitValue() != 0) {
-                    throw new KeyNotFoundException();
-                }
-                return convertStreamToString(proc.getInputStream());
-            } catch (IOException e) {
-                throw new KeyNotFoundException(e);
-            } catch (InterruptedException ex) {
-                throw new BackingStoreException(ex);
-            }
-        }
-
-        private static String convertStreamToString(final InputStream inputStream) {
-            final Scanner scanner = new Scanner(inputStream).useDelimiter("\\A");
-            return scanner.hasNext() ? scanner.next() : "";
-        }
-    }
-
-    /**
-     * Key is not found
-     */
-    public static final class KeyNotFoundException extends Exception {
-
-        private static final long serialVersionUID = 1L;
-
-        private static final String KEY_NOT_FOUND = "Key not found";
-
-        /**
-         * Default constr
-         */
-        public KeyNotFoundException() {
-            super(KEY_NOT_FOUND);
-        }
-
-        public KeyNotFoundException(Throwable throwable) {
-            super(KEY_NOT_FOUND, throwable);
-        }
-
     }
 }

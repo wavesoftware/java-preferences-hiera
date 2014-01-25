@@ -17,13 +17,14 @@ public class HieraPreferences extends AbstractPreferences {
      */
     private static final Logger LOG = LoggerFactory.getLogger(HieraPreferences.class);
 
-    private final HieraBackend backend;
-
     private static final String NOT_SUPPORTED = "Not supported by Hiera.";
 
-    private Preferences defaultPrefs;
+    private static final long serialVersionUID = 1L;
 
-    private BackingStoreException lastException;
+    private transient BackingStoreException lastException;
+    private HieraBackend backend = null;
+
+    private Preferences defaultPrefs;
 
     /**
      * Default constructor
@@ -38,9 +39,8 @@ public class HieraPreferences extends AbstractPreferences {
      * @param perent the parent of this preference
      * @param name name of the preference
      */
-    protected HieraPreferences(AbstractPreferences perent, String name) {
+    protected HieraPreferences(final AbstractPreferences perent, final String name) {
         super(perent, name);
-        backend = HieraBackend.instance();
     }
 
     @Override
@@ -78,13 +78,14 @@ public class HieraPreferences extends AbstractPreferences {
      * @return a found value or null if not found
      */
     private String getFromHiera(final String key) {
+        String ret = null;
         try {
-            return backend.get(key, null);
+            ret = getBackend().get(key, null);
         } catch (BackingStoreException ex) {
             lastException = ex;
             LOG.error("Hiera error", ex);
-            return null;
         }
+        return ret;
     }
 
     @Override
@@ -124,8 +125,8 @@ public class HieraPreferences extends AbstractPreferences {
         if (defaultPrefs == null) {
             throw new UnsupportedOperationException(NOT_SUPPORTED);
         }
-        Preferences sub = defaultPrefs.node(name);
-        HieraPreferences subHiera = new HieraPreferences(this, name);
+        final Preferences sub = defaultPrefs.node(name);
+        final HieraPreferences subHiera = new HieraPreferences(this, name);
         subHiera.setSystemDefaultPreferences(sub);
         return subHiera;
     }
@@ -149,7 +150,7 @@ public class HieraPreferences extends AbstractPreferences {
      *
      * @param defaultPrefs system default preferences
      */
-    void setSystemDefaultPreferences(Preferences defaultPrefs) {
+    public void setSystemDefaultPreferences(final Preferences defaultPrefs) {
         this.defaultPrefs = defaultPrefs;
     }
 
@@ -160,6 +161,13 @@ public class HieraPreferences extends AbstractPreferences {
      */
     protected BackingStoreException getLastException() {
         return lastException;
+    }
+
+    private HieraBackend getBackend() {
+        if (backend == null) {
+            backend = HieraBackend.instance();
+        }
+        return backend;
     }
 
     /**

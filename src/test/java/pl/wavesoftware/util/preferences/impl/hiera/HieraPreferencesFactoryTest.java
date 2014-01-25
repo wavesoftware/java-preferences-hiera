@@ -48,10 +48,10 @@ public class HieraPreferencesFactoryTest implements Serializable {
         runned = 0;
         HieraBackend.clearInstance();
         HieraPreferencesFactory.activate();
-        HieraBackend.instance().runner = new HieraBackend.CliRunner() {
+        HieraBackend.instance().runner = new CliRunner() {
 
             @Override
-            public String run(final String command) throws HieraBackend.KeyNotFoundException, BackingStoreException {
+            public String run(final String command) throws KeyNotFoundException, BackingStoreException {
                 runned++;
                 return "true";
             }
@@ -69,10 +69,10 @@ public class HieraPreferencesFactoryTest implements Serializable {
         HieraBackend.clearInstance();
         HieraBackend.instance().resetCache();
         HieraPreferencesFactory.activate();
-        HieraBackend.instance().runner = new HieraBackend.CliRunner() {
+        HieraBackend.instance().runner = new CliRunner() {
 
             @Override
-            public String run(final String command) throws HieraBackend.KeyNotFoundException, BackingStoreException {
+            public String run(final String command) throws KeyNotFoundException, BackingStoreException {
                 runned++;
                 return "true";
             }
@@ -84,10 +84,17 @@ public class HieraPreferencesFactoryTest implements Serializable {
         prefs.getBoolean("production", false);
         prefs.getBoolean("production", false);
         boolean production = prefs.getBoolean("production", false);
-
-        HieraBackend.clearInstance();
         assertEquals("internal runner shuld be runned once", 1, runned);
         assertTrue("Production setting shuld be true", production);
+
+        System.gc();
+
+        prefs.getBoolean("production", false);
+        production = prefs.getBoolean("production", false);
+        assertEquals("internal runner shuld be runned once", 1, runned);
+        assertTrue("Production setting shuld be true", production);
+
+        HieraBackend.clearInstance();
     }
 
     @Test
