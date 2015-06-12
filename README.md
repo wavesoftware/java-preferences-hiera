@@ -1,9 +1,9 @@
-java-preferences-hiera
+Hiera Provider for Java Preferences API
 ======================
 
-[![Build Status](https://travis-ci.org/wavesoftware/java-preferences-hiera.png?branch=master)](https://travis-ci.org/wavesoftware/java-preferences-hiera) [![Build Status](http://jenkins-ro.wavesoftware.pl/buildStatus/icon?job=Java-Hiera-Preferences)](http://jenkins-ro.wavesoftware.pl/job/Java-Hiera-Preferences) [![Dependency Status](https://www.versioneye.com/user/projects/547b704f60944d993a000260/badge.svg?style=flat)](https://www.versioneye.com/user/projects/547b704f60944d993a000260)
+[![Build Status](https://travis-ci.org/wavesoftware/java-preferences-hiera.png?branch=master)](https://travis-ci.org/wavesoftware/java-preferences-hiera) [![Build Status](http://jenkins-ro.wavesoftware.pl/buildStatus/icon?job=Java-Hiera-Preferences)](http://jenkins-ro.wavesoftware.pl/job/Java-Hiera-Preferences) [![SonarQube Coverage](https://img.shields.io/sonar/http/sonar-ro.wavesoftware.pl/pl.wavesoftware:preferences-hiera/coverage.svg)](http://sonar-ro.wavesoftware.pl/dashboard/index?id=pl.wavesoftware:preferences-hiera)  [![SonarQube Technical Dept](https://img.shields.io/sonar/http/sonar-ro.wavesoftware.pl/pl.wavesoftware:preferences-hiera/tech_debt.svg)](http://sonar-ro.wavesoftware.pl/dashboard/index?id=pl.wavesoftware:preferences-hiera) [![Maven Central](https://img.shields.io/maven-central/v/pl.wavesoftware/preferences-hiera.svg)](http://search.maven.org/#search%7Cga%7C1%7Ca%3A%22preferences-hiera%22)
 
-Java Preferences API backend for Puppetlabs Hiera
+Hiera Provider for Java Preferences API delivers a easy to use backend for Puppetlabs Hiera
 
 Instalation
 -----------
