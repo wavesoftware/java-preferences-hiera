@@ -2,6 +2,7 @@ package pl.wavesoftware.util.preferences.impl.hiera;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.util.prefs.Preferences;
 import java.util.prefs.PreferencesFactory;
@@ -16,7 +17,26 @@ public class HieraPreferencesFactory implements PreferencesFactory {
 
     private static final String PROP = "java.util.prefs.PreferencesFactory";
 
+    private static final Field FACTORY_FIELD;
+
+    private static final Field MODIFIERS_FIELD;
+
+    static {
+        FACTORY_FIELD = getField(Preferences.class, "factory");
+        MODIFIERS_FIELD = getField(Field.class, "modifiers");
+    }
+
     private static Order order = Order.HIERA_OVERWRITES;
+
+    protected static Field getField(final Class<?> cls, final String name) {
+        try {
+            return cls.getDeclaredField(name);
+        } catch (NoSuchFieldException ex) {
+            throw new DeveloperError(ex);
+        } catch (SecurityException ex) {
+            throw new DeveloperError(ex);
+        }
+    }
 
     /**
      * Gets a default JAVA Preferences factory
@@ -26,26 +46,47 @@ public class HieraPreferencesFactory implements PreferencesFactory {
     public static PreferencesFactory getDefaultJavaFactory() {
         // Use platform-specific system-wide default
         final String osName = System.getProperty("os.name");
-        String platformFactory;
-        if (osName.startsWith("Windows")) {
-            platformFactory = "java.util.prefs.WindowsPreferencesFactory";
-        } else if (osName.contains("OS X")) {
-            platformFactory = "java.util.prefs.MacOSXPreferencesFactory";
-        } else {
-            platformFactory = "java.util.prefs.FileSystemPreferencesFactory";
-        }
+        
         try {
-            final Class<?> cls = Class.forName(platformFactory, false, null);
+            final Class<?> cls = findPlatformFactoryClass(osName);
             final Constructor<?> constr = cls.getDeclaredConstructors()[0];
             constr.setAccessible(true);
             final Object instance = constr.newInstance();
             constr.setAccessible(false);
             return (PreferencesFactory) instance;
-        } catch (Exception e) {
-            final InternalError error = new InternalError("Can't instantiate platform default Preferences factory "
-                    + platformFactory);
-            error.initCause(e);
-            throw error;
+        } catch (IllegalAccessException e) {
+            throw handleException(e, osName);
+        } catch (IllegalArgumentException e) {
+            throw handleException(e, osName);
+        } catch (InstantiationException e) {
+            throw handleException(e, osName);
+        } catch (SecurityException e) {
+            throw handleException(e, osName);
+        } catch (InvocationTargetException e) {
+            throw handleException(e, osName);
+        }
+    }
+
+    private static InternalError handleException(final Exception exception, final String osName) {
+        final InternalError error = new InternalError("Can't instantiate platform default Preferences factory "
+                + osName);
+        error.initCause(exception);
+        return error;
+    }
+
+    protected static Class<?> findPlatformFactoryClass(final String osName) {
+        try {
+            String platformFactory;
+            if (osName.startsWith("Windows")) {
+                platformFactory = "java.util.prefs.WindowsPreferencesFactory";
+            } else if (osName.contains("OS X")) {
+                platformFactory = "java.util.prefs.MacOSXPreferencesFactory";
+            } else {
+                platformFactory = "java.util.prefs.FileSystemPreferencesFactory";
+            }
+            return Class.forName(platformFactory, false, null);
+        } catch (ClassNotFoundException ex) {
+            throw new DeveloperError(ex);
         }
     }
 
@@ -55,7 +96,7 @@ public class HieraPreferencesFactory implements PreferencesFactory {
     public static void activate() {
         if (!isActivated()) {
             System.setProperty(PROP, HieraPreferencesFactory.class.getName());
-            setFinalStaticField("factory", new HieraPreferencesFactory());
+            setSystemPreferencesFactory(new HieraPreferencesFactory());
         }
     }
 
@@ -66,7 +107,7 @@ public class HieraPreferencesFactory implements PreferencesFactory {
         if (isActivated()) {
             System.clearProperty(PROP);
             final PreferencesFactory defaultFactory = HieraPreferencesFactory.getDefaultJavaFactory();
-            setFinalStaticField("factory", defaultFactory);
+            setSystemPreferencesFactory(defaultFactory);
         }
     }
 
@@ -91,45 +132,21 @@ public class HieraPreferencesFactory implements PreferencesFactory {
     }
 
     /**
-     * Force to set private final static field in Java
+     * Force to set system's PreferencesFactory in Java
      *
-     * @param fieldName name of a field to be set
      * @param newValue a new value of that field
      */
-    private static void setFinalStaticField(final String fieldName, final Object newValue) {
+    private static void setSystemPreferencesFactory(final PreferencesFactory newValue) {
         try {
-            final Field factoryField = Preferences.class.getDeclaredField(fieldName);
-            setFinalStaticField(factoryField, newValue);
-        } catch (NoSuchFieldException ex) {
-            throw new DeveloperError(ex);
-        } catch (SecurityException ex) {
-            throw new DeveloperError(ex);
-        }
-    }
+            FACTORY_FIELD.setAccessible(true);
+            MODIFIERS_FIELD.setAccessible(true);
+            MODIFIERS_FIELD.setInt(FACTORY_FIELD, FACTORY_FIELD.getModifiers() & ~Modifier.FINAL);
 
-    /**
-     * Force to set private final static field in Java
-     *
-     * @param field field to be set
-     * @param newValue a new value of that field
-     */
-    private static void setFinalStaticField(final Field field, final Object newValue) {
-        try {
-            field.setAccessible(true);
+            FACTORY_FIELD.set(null, newValue);
 
-            final Field modifiersField = Field.class.getDeclaredField("modifiers");
-            modifiersField.setAccessible(true);
-            modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
-
-            field.set(null, newValue);
-
-            modifiersField.setInt(field, field.getModifiers() & Modifier.FINAL);
-            modifiersField.setAccessible(false);
-            field.setAccessible(false);
-        } catch (NoSuchFieldException ex) {
-            throw new DeveloperError(ex);
-        } catch (SecurityException ex) {
-            throw new DeveloperError(ex);
+            MODIFIERS_FIELD.setInt(FACTORY_FIELD, FACTORY_FIELD.getModifiers() & Modifier.FINAL);
+            MODIFIERS_FIELD.setAccessible(false);
+            FACTORY_FIELD.setAccessible(false);
         } catch (IllegalArgumentException ex) {
             throw new DeveloperError(ex);
         } catch (IllegalAccessException ex) {

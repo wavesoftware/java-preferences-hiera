@@ -1,7 +1,7 @@
 java-preferences-hiera
 ======================
 
-[![Build Status](https://travis-ci.org/wavesoftware/java-preferences-hiera.png?branch=master)](https://travis-ci.org/wavesoftware/java-preferences-hiera)
+[![Build Status](https://travis-ci.org/wavesoftware/java-preferences-hiera.png?branch=master)](https://travis-ci.org/wavesoftware/java-preferences-hiera) [![Build Status](http://jenkins-ro.wavesoftware.pl/buildStatus/icon?job=Java-Hiera-Preferences)](http://jenkins-ro.wavesoftware.pl/job/Java-Hiera-Preferences)
 
 Java Preferences API backend for Puppetlabs Hiera
 

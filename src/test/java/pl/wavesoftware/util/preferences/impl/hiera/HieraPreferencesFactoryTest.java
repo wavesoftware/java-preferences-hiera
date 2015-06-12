@@ -6,12 +6,14 @@ import java.util.Arrays;
 import java.util.UUID;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
+
+import static org.hamcrest.Matchers.*;
+
 import org.junit.After;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import org.junit.Test;
+
+import static org.junit.Assert.*;
+
 
 /**
  *
@@ -41,7 +43,9 @@ public class HieraPreferencesFactoryTest implements Serializable {
         assertNotNull("Result should be not null", result);
     }
 
-    private int runned = 0;
+    private transient int runned = 0;
+
+    private static final String PRODUCTION = "production";
 
     @Test
     public void testGlobal() {
@@ -57,7 +61,7 @@ public class HieraPreferencesFactoryTest implements Serializable {
             }
         };
         final Preferences prefs = Preferences.userRoot();
-        final boolean production = prefs.getBoolean("production", false);
+        final boolean production = prefs.getBoolean(PRODUCTION, false);
         HieraBackend.clearInstance();
         assertTrue("Production setting shuld be true", production);
         assertEquals("internal runner shuld be runned once", 1, runned);
@@ -78,19 +82,19 @@ public class HieraPreferencesFactoryTest implements Serializable {
             }
         };
         final Preferences prefs = Preferences.userRoot();
-        prefs.getBoolean("production", false);
-        prefs.getBoolean("production", false);
-        prefs.getBoolean("production", false);
-        prefs.getBoolean("production", false);
-        prefs.getBoolean("production", false);
-        boolean production = prefs.getBoolean("production", false);
+        prefs.getBoolean(PRODUCTION, false);
+        prefs.getBoolean(PRODUCTION, false);
+        prefs.getBoolean(PRODUCTION, false);
+        prefs.getBoolean(PRODUCTION, false);
+        prefs.getBoolean(PRODUCTION, false);
+        boolean production = prefs.getBoolean(PRODUCTION, false);
         assertEquals("internal runner shuld be runned once", 1, runned);
         assertTrue("Production setting shuld be true", production);
 
         System.gc();
 
-        prefs.getBoolean("production", false);
-        production = prefs.getBoolean("production", false);
+        prefs.getBoolean(PRODUCTION, false);
+        production = prefs.getBoolean(PRODUCTION, false);
         assertEquals("internal runner shuld be runned once", 1, runned);
         assertTrue("Production setting shuld be true", production);
 
@@ -102,16 +106,69 @@ public class HieraPreferencesFactoryTest implements Serializable {
         testGlobal();
         HieraPreferencesFactory.restore();
         final Preferences prefs = Preferences.userRoot();
-        String key = "key-" + UUID.randomUUID().toString().replace("-", "");
-        String expected = "SomeString";
+        final String key = "key-" + UUID.randomUUID().toString().replace("-", "");
+        final String expected = "SomeString";
         String fetched = prefs.get(key, expected);
         assertEquals(expected, fetched);
-        String other = "OtherString";
+        final String other = "OtherString";
         prefs.put(key, other);
         fetched = prefs.get(key, expected);
         assertEquals(other, fetched);
         prefs.remove(key);
         assertFalse(Arrays.asList(prefs.keys()).contains(key));
+    }
+
+    @Test
+    public void testStaticCreateUserRoot() {
+        Preferences prefs = HieraPreferencesFactory.createUserRoot();
+        assertNotNull(prefs);
+    }
+
+    @Test
+    public void testStaticCreateSystemRoot() {
+        Preferences prefs = HieraPreferencesFactory.createSystemRoot();
+        assertNotNull(prefs);
+    }
+
+    @Test
+    public void testInvalidGetField() {
+
+    }
+
+    @Test
+    public void testInvalidFindPlatformFactoryClass() {
+        Class<?> defaultValue = HieraPreferencesFactory.findPlatformFactoryClass("UnknownOS Invalid");
+        assertNotNull(defaultValue);
+        assertEquals("java.util.prefs.FileSystemPreferencesFactory", defaultValue.getName());
+
+        final String osName = System.getProperty("os.name");
+        if (osName.startsWith("Windows")) {
+            Class<?> windowsClass = HieraPreferencesFactory.findPlatformFactoryClass("Windows 7");
+            assertEquals("java.util.prefs.WindowsPreferencesFactory", windowsClass.getName());
+        } else {
+            try {
+                HieraPreferencesFactory.findPlatformFactoryClass("Windows 8");
+                fail("Expected to throw DeveloperError(ClassNotFoundException) on non-windows machine");
+            } catch (DeveloperError de) {
+                assertThat(de, is(instanceOf(DeveloperError.class)));
+                ClassNotFoundException cnfe = ClassNotFoundException.class.cast(de.getCause());
+                assertThat(cnfe.getLocalizedMessage(), containsString("java/util/prefs/WindowsPreferencesFactory"));
+            }
+        }
+
+        if (osName.contains("OS X")) {
+            Class<?> macClass = HieraPreferencesFactory.findPlatformFactoryClass("MacOS X Lion");
+            assertEquals("java.util.prefs.MacOSXPreferencesFactory", macClass.getName());
+        } else {
+            try {
+                HieraPreferencesFactory.findPlatformFactoryClass("MacOS X");
+                fail("Expected to throw DeveloperError(ClassNotFoundException) on non-mac machine");
+            } catch (DeveloperError de) {
+                assertThat(de, is(instanceOf(DeveloperError.class)));
+                ClassNotFoundException cnfe = ClassNotFoundException.class.cast(de.getCause());
+                assertThat(cnfe.getLocalizedMessage(), containsString("java/util/prefs/MacOSXPreferencesFactory"));
+            }
+        }
     }
 
     @After

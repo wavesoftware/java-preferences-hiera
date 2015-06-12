@@ -24,20 +24,8 @@ public class DeveloperError extends RuntimeException {
 
     private static final long serialVersionUID = 1L;
 
-    public DeveloperError() {
-        super();
-    }
-
-    public DeveloperError(final String message) {
-        super(message);
-    }
-
     public DeveloperError(final Throwable throwable) {
         super(throwable);
-    }
-
-    public DeveloperError(final String message, final Throwable throwable) {
-        super(message, throwable);
     }
 
 }
