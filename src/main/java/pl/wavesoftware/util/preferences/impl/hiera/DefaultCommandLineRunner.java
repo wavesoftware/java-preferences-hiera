@@ -19,6 +19,7 @@ package pl.wavesoftware.util.preferences.impl.hiera;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
+import java.nio.charset.Charset;
 import java.util.Scanner;
 import java.util.prefs.BackingStoreException;
 
@@ -47,7 +48,7 @@ class DefaultCommandLineRunner implements CliRunner, Serializable {
     }
 
     private static String convertStreamToString(final InputStream inputStream) {
-        final Scanner scanner = new Scanner(inputStream).useDelimiter("\\A");
+        final Scanner scanner = new Scanner(inputStream, Charset.defaultCharset().name()).useDelimiter("\\A");
         return scanner.hasNext() ? scanner.next() : "";
     }
 

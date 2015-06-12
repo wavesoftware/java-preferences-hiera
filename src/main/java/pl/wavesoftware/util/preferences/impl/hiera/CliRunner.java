@@ -20,6 +20,8 @@ import java.util.prefs.BackingStoreException;
 
 /**
  * Cli runner
+ *
+ * @author Krzysztof Suszyński <krzysztof.suszynski@wavesoftware.pl>
  */
 public interface CliRunner {
 

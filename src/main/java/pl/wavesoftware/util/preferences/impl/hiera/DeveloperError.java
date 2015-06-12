@@ -24,6 +24,11 @@ public class DeveloperError extends RuntimeException {
 
     private static final long serialVersionUID = 1L;
 
+    /**
+     * Default contructor
+     *
+     * @param throwable a cause of error
+     */
     public DeveloperError(final Throwable throwable) {
         super(throwable);
     }

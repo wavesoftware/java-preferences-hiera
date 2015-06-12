@@ -18,6 +18,8 @@ package pl.wavesoftware.util.preferences.impl.hiera;
 
 /**
  * Key is not found
+ *
+ * @author Krzysztof Suszyński <krzysztof.suszynski@wavesoftware.pl>
  */
 public final class KeyNotFoundException extends Exception {
 
@@ -32,6 +34,11 @@ public final class KeyNotFoundException extends Exception {
         super(KEY_NOT_FOUND);
     }
 
+    /**
+     * Constructor with throwable
+     *
+     * @param throwable a throwable couse
+     */
     public KeyNotFoundException(final Throwable throwable) {
         super(KEY_NOT_FOUND, throwable);
     }
