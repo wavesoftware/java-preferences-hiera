@@ -9,7 +9,7 @@
 
     <groupId>pl.wavesoftware</groupId>
     <artifactId>preferences-hiera</artifactId>
-    <version>0.3.3-SNAPSHOT</version>
+    <version>0.3.3</version>
     <packaging>jar</packaging>
 
     <name>Hiera Preferences Backend</name>
