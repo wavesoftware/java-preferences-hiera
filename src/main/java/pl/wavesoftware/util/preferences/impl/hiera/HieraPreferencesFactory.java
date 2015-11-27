@@ -1,12 +1,16 @@
 package pl.wavesoftware.util.preferences.impl.hiera;
 
+import pl.wavesoftware.eid.utils.EidPreconditions;
+import pl.wavesoftware.util.preferences.impl.hiera.HieraPreferences.Order;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.util.prefs.Preferences;
 import java.util.prefs.PreferencesFactory;
-import pl.wavesoftware.util.preferences.impl.hiera.HieraPreferences.Order;
+
+import static pl.wavesoftware.eid.utils.EidPreconditions.tryToExecute;
 
 /**
  * Pupper hiera preferences factory implementation
@@ -29,13 +33,12 @@ public class HieraPreferencesFactory implements PreferencesFactory {
     private static Order order = Order.HIERA_OVERWRITES;
 
     protected static Field getField(final Class<?> cls, final String name) {
-        try {
-            return cls.getDeclaredField(name);
-        } catch (NoSuchFieldException ex) {
-            throw new DeveloperError(ex);
-        } catch (SecurityException ex) {
-            throw new DeveloperError(ex);
-        }
+        return tryToExecute(new EidPreconditions.UnsafeSupplier<Field>() {
+            @Override
+            public Field get() throws NoSuchFieldException, SecurityException {
+                return cls.getDeclaredField(name);
+            }
+        }, "20151127:165756");
     }
 
     /**
@@ -75,19 +78,21 @@ public class HieraPreferencesFactory implements PreferencesFactory {
     }
 
     protected static Class<?> findPlatformFactoryClass(final String osName) {
-        try {
-            String platformFactory;
-            if (osName.startsWith("Windows")) {
-                platformFactory = "java.util.prefs.WindowsPreferencesFactory";
-            } else if (osName.contains("OS X")) {
-                platformFactory = "java.util.prefs.MacOSXPreferencesFactory";
-            } else {
-                platformFactory = "java.util.prefs.FileSystemPreferencesFactory";
+        return tryToExecute(new EidPreconditions.UnsafeSupplier<Class<?>>() {
+
+            @Override
+            public Class<?> get() throws ClassNotFoundException {
+                String platformFactory;
+                if (osName.startsWith("Windows")) {
+                    platformFactory = "java.util.prefs.WindowsPreferencesFactory";
+                } else if (osName.contains("OS X")) {
+                    platformFactory = "java.util.prefs.MacOSXPreferencesFactory";
+                } else {
+                    platformFactory = "java.util.prefs.FileSystemPreferencesFactory";
+                }
+                return Class.forName(platformFactory, false, null);
             }
-            return Class.forName(platformFactory, false, null);
-        } catch (ClassNotFoundException ex) {
-            throw new DeveloperError(ex);
-        }
+        }, "20151127:165634");
     }
 
     /**
@@ -137,21 +142,21 @@ public class HieraPreferencesFactory implements PreferencesFactory {
      * @param newValue a new value of that field
      */
     private static void setSystemPreferencesFactory(final PreferencesFactory newValue) {
-        try {
-            FACTORY_FIELD.setAccessible(true);
-            MODIFIERS_FIELD.setAccessible(true);
-            MODIFIERS_FIELD.setInt(FACTORY_FIELD, FACTORY_FIELD.getModifiers() & ~Modifier.FINAL);
+        tryToExecute(new EidPreconditions.UnsafeProcedure() {
 
-            FACTORY_FIELD.set(null, newValue);
+            @Override
+            public void execute() throws IllegalAccessException, IllegalArgumentException {
+                FACTORY_FIELD.setAccessible(true);
+                MODIFIERS_FIELD.setAccessible(true);
+                MODIFIERS_FIELD.setInt(FACTORY_FIELD, FACTORY_FIELD.getModifiers() & ~Modifier.FINAL);
 
-            MODIFIERS_FIELD.setInt(FACTORY_FIELD, FACTORY_FIELD.getModifiers() & Modifier.FINAL);
-            MODIFIERS_FIELD.setAccessible(false);
-            FACTORY_FIELD.setAccessible(false);
-        } catch (IllegalArgumentException ex) {
-            throw new DeveloperError(ex);
-        } catch (IllegalAccessException ex) {
-            throw new DeveloperError(ex);
-        }
+                FACTORY_FIELD.set(null, newValue);
+
+                MODIFIERS_FIELD.setInt(FACTORY_FIELD, FACTORY_FIELD.getModifiers() & Modifier.FINAL);
+                MODIFIERS_FIELD.setAccessible(false);
+                FACTORY_FIELD.setAccessible(false);
+            }
+        }, "20151127:165916");
     }
 
     /**

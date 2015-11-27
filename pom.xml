@@ -160,5 +160,10 @@
             <version>18.0</version>
             <type>jar</type>
         </dependency>
+        <dependency>
+            <groupId>pl.wavesoftware</groupId>
+            <artifactId>eid-exceptions</artifactId>
+            <version>1.1.0</version>
+        </dependency>
     </dependencies>
 </project>

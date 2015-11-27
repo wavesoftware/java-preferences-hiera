@@ -1,10 +1,11 @@
 package pl.wavesoftware.util.preferences.impl.hiera;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.prefs.AbstractPreferences;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -16,14 +17,9 @@ public class HieraPreferences extends AbstractPreferences {
      * Logger for this class
      */
     private static final Logger LOG = LoggerFactory.getLogger(HieraPreferences.class);
-
     private static final String NOT_SUPPORTED = "Not supported by Hiera.";
-
-    private static final long serialVersionUID = 1L;
-
     private transient BackingStoreException lastException;
     private HieraBackend backend = null;
-
     private Preferences defaultPrefs;
 
     /**

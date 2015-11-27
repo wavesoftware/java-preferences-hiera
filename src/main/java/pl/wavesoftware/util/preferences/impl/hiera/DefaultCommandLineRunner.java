@@ -16,12 +16,16 @@
 
 package pl.wavesoftware.util.preferences.impl.hiera;
 
+import pl.wavesoftware.eid.utils.EidPreconditions;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.nio.charset.Charset;
 import java.util.Scanner;
 import java.util.prefs.BackingStoreException;
+
+import static pl.wavesoftware.eid.utils.EidPreconditions.tryToExecute;
 
 /**
  *
@@ -32,7 +36,7 @@ class DefaultCommandLineRunner implements CliRunner, Serializable {
     private static final long serialVersionUID = 1L;
 
     @Override
-    public String run(final String command) throws KeyNotFoundException, BackingStoreException {
+    public String run(final String command) throws BackingStoreException, KeyNotFoundException {
         try {
             final Process proc = Runtime.getRuntime().exec(command);
             proc.waitFor();
@@ -48,8 +52,17 @@ class DefaultCommandLineRunner implements CliRunner, Serializable {
     }
 
     private static String convertStreamToString(final InputStream inputStream) {
-        final Scanner scanner = new Scanner(inputStream, Charset.defaultCharset().name()).useDelimiter("\\A");
-        return scanner.hasNext() ? scanner.next() : "";
+        try {
+            final Scanner scanner = new Scanner(inputStream, Charset.defaultCharset().name()).useDelimiter("\\A");
+            return scanner.hasNext() ? scanner.next() : "";
+        } finally {
+            tryToExecute(new EidPreconditions.UnsafeProcedure() {
+                @Override
+                public void execute() throws IOException {
+                    inputStream.close();
+                }
+            }, "20151127:165452");
+        }
     }
 
 }

@@ -4,11 +4,12 @@
  */
 package pl.wavesoftware.util.preferences.impl.hiera;
 
+import org.junit.Before;
+import org.junit.Test;
+
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 import java.util.prefs.BackingStoreException;
-import org.junit.Before;
-import org.junit.Test;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
@@ -54,8 +55,9 @@ public class HieraBackendTest {
         String key = "production";
         HieraBackend instance = new HieraBackendMock();
         String expResult = "false";
-        String result = instance.get(key);
-        assertEquals(expResult, result);
+        HieraBackend.Execution execution = instance.get(key);
+        assertTrue(execution.isOk);
+        assertEquals(expResult, execution.result);
     }
 
     private static final class HieraBackendMock extends HieraBackend {

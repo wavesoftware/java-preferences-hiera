@@ -3,18 +3,19 @@ package pl.wavesoftware.util.preferences.impl.hiera;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import java.io.Serializable;
+
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.prefs.BackingStoreException;
+
+import static pl.wavesoftware.eid.utils.EidPreconditions.checkArgument;
+import static pl.wavesoftware.eid.utils.EidPreconditions.checkNotNull;
 
 /**
  *
  * @author Krzysztof Suszyński <krzysztof.suszynski@wavesoftware.pl>
  */
-public class HieraBackend implements Serializable {
-
-    private static final long serialVersionUID = 1L;
+public class HieraBackend {
 
     private static HieraBackend inst;
 
@@ -28,25 +29,9 @@ public class HieraBackend implements Serializable {
 
     private boolean disabled = false;
 
-    private String executable = "hiera %s";
+    private String executable = "hiera '%s'";
 
     private LoadingCache<String, String> cache;
-
-    protected boolean isDisabled() {
-        return disabled;
-    }
-
-    protected void setDisabled(final boolean disabled) {
-        this.disabled = disabled;
-    }
-
-    protected CliRunner getRunner() {
-        return runner;
-    }
-
-    protected void setRunner(final CliRunner runner) {
-        this.runner = runner;
-    }
 
     protected final void setCache(final LoadingCache<String, String> cache) {
         this.cache = cache;
@@ -148,15 +133,19 @@ public class HieraBackend implements Serializable {
      * @throws BackingStoreException thrown if error occurd
      */
     public String get(final String key, final String defaultValue) throws BackingStoreException {
-        try {
-            return get(key);
-        } catch (KeyNotFoundException ex) {
-            return defaultValue;
-        }
+        Execution exec = get(key);
+        return exec.isOk ? exec.result : defaultValue;
     }
 
     private String runRunnerForKey(final String key) throws KeyNotFoundException, BackingStoreException {
-        return runner.run(String.format(executable, key)).trim();
+        ensureIsSecureKey(key);
+        String command = String.format(executable, key);
+        return runner.run(command).trim();
+    }
+
+    private void ensureIsSecureKey(final String key) {
+        checkNotNull(key, "20151127:163952");
+        checkArgument(key.matches("^[a-zA-Z0-9.,_+=:-]+$"), "20151127:164119");
     }
 
     /**
@@ -165,21 +154,41 @@ public class HieraBackend implements Serializable {
      * @param key the key to search for
      * @return founded value
      * @throws BackingStoreException thrown if error occurd
-     * @throws KeyNotFoundException thrown if key is not found
      */
-    public String get(final String key) throws BackingStoreException, KeyNotFoundException {
+    protected Execution get(final String key) throws BackingStoreException {
         try {
-            final String ret = getCache().get(key);
-            if (ret == null || "nil".equals(ret) || "null".equals(ret)) {
-                throw new KeyNotFoundException();
-            }
-            return ret;
+            return getInsecurely(key);
         } catch (ExecutionException ex) {
-            final Throwable cause = ex.getCause();
-            if (cause instanceof KeyNotFoundException) {
-                throw (KeyNotFoundException) cause;
-            }
             throw new BackingStoreException(ex);
+        }
+    }
+
+    private Execution getInsecurely(String key) throws ExecutionException {
+        final String ret = getCache().get(key);
+        Execution execution;
+        if (ret == null || "nil".equals(ret) || "null".equals(ret)) {
+            execution = Execution.fail();
+        } else {
+            execution = Execution.ok(ret);
+        }
+        return execution;
+    }
+
+    protected static class Execution {
+        protected final String result;
+        protected final boolean isOk;
+
+        private Execution(String result, boolean isOk) {
+            this.result = result;
+            this.isOk = isOk;
+        }
+
+        static Execution ok(String result) {
+            return new Execution(result, true);
+        }
+
+        static Execution fail() {
+            return new Execution(null, false);
         }
     }
 }

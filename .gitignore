@@ -4,4 +4,10 @@
 *.jar
 *.war
 *.ear
-/target/
+/target
+
+# IDE
+*.iml
+.idea
+.settings
+.project

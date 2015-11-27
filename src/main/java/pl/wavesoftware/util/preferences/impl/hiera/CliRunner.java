@@ -30,9 +30,8 @@ public interface CliRunner {
      *
      * @param command to run at CLI
      * @return Executed output STDOUT
-     * @throws KeyNotFoundException if key is not found
-     * @throws BackingStoreException if error occurd
+     * @throws BackingStoreException if error occurred
      */
-    String run(final String command) throws KeyNotFoundException, BackingStoreException;
+    String run(final String command) throws BackingStoreException, KeyNotFoundException;
 
 }

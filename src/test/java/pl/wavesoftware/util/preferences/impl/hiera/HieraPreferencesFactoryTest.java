@@ -1,6 +1,10 @@
 
 package pl.wavesoftware.util.preferences.impl.hiera;
 
+import org.junit.After;
+import org.junit.Test;
+import pl.wavesoftware.eid.exceptions.EidRuntimeException;
+
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.UUID;
@@ -8,10 +12,6 @@ import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
 import static org.hamcrest.Matchers.*;
-
-import org.junit.After;
-import org.junit.Test;
-
 import static org.junit.Assert.*;
 
 
@@ -148,9 +148,9 @@ public class HieraPreferencesFactoryTest implements Serializable {
         } else {
             try {
                 HieraPreferencesFactory.findPlatformFactoryClass("Windows 8");
-                fail("Expected to throw DeveloperError(ClassNotFoundException) on non-windows machine");
-            } catch (DeveloperError de) {
-                assertThat(de, is(instanceOf(DeveloperError.class)));
+                fail("Expected to throw EidRuntimeException(ClassNotFoundException) on non-windows machine");
+            } catch (EidRuntimeException de) {
+                assertThat(de, is(instanceOf(EidRuntimeException.class)));
                 ClassNotFoundException cnfe = ClassNotFoundException.class.cast(de.getCause());
                 assertThat(cnfe.getLocalizedMessage(), containsString("java/util/prefs/WindowsPreferencesFactory"));
             }
@@ -162,9 +162,9 @@ public class HieraPreferencesFactoryTest implements Serializable {
         } else {
             try {
                 HieraPreferencesFactory.findPlatformFactoryClass("MacOS X");
-                fail("Expected to throw DeveloperError(ClassNotFoundException) on non-mac machine");
-            } catch (DeveloperError de) {
-                assertThat(de, is(instanceOf(DeveloperError.class)));
+                fail("Expected to throw EidRuntimeException(ClassNotFoundException) on non-mac machine");
+            } catch (EidRuntimeException de) {
+                assertThat(de, is(instanceOf(EidRuntimeException.class)));
                 ClassNotFoundException cnfe = ClassNotFoundException.class.cast(de.getCause());
                 assertThat(cnfe.getLocalizedMessage(), containsString("java/util/prefs/MacOSXPreferencesFactory"));
             }
