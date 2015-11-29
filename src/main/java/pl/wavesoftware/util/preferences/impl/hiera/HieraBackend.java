@@ -3,13 +3,16 @@ package pl.wavesoftware.util.preferences.impl.hiera;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import pl.wavesoftware.eid.utils.EidPreconditions;
 
+import javax.annotation.Nonnull;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.prefs.BackingStoreException;
 
 import static pl.wavesoftware.eid.utils.EidPreconditions.checkArgument;
 import static pl.wavesoftware.eid.utils.EidPreconditions.checkNotNull;
+import static pl.wavesoftware.eid.utils.EidPreconditions.tryToExecute;
 
 /**
  *
@@ -19,8 +22,6 @@ public class HieraBackend {
 
     private static HieraBackend inst;
 
-    private static final Object LOCK = new Object();
-
     private static final int CACHE_TIME = 120;
 
     private static final TimeUnit CACHE_TIME_UNIT = TimeUnit.SECONDS;
@@ -29,11 +30,11 @@ public class HieraBackend {
 
     private boolean disabled = false;
 
-    private String executable = "hiera '%s'";
+    private String executable = "hiera";
 
-    private LoadingCache<String, String> cache;
+    private LoadingCache<String, Execution> cache;
 
-    protected final void setCache(final LoadingCache<String, String> cache) {
+    protected final void setCache(final LoadingCache<String, Execution> cache) {
         this.cache = cache;
     }
 
@@ -59,17 +60,23 @@ public class HieraBackend {
      */
     public final void resetCache(final int cacheTime, final TimeUnit cacheTimeUnit) {
         cleanCache();
-        cache = CacheBuilder.newBuilder().expireAfterAccess(cacheTime, cacheTimeUnit).build(
-                new CacheLoader<String, String>() {
+        CacheLoader<String, Execution> loader = new CacheLoader<String, Execution>() {
 
-                    @Override
-                    public String load(final String key) throws KeyNotFoundException, BackingStoreException {
-                        return runRunnerForKey(key);
-                    }
-                });
+            @Override
+            public Execution load(@Nonnull final String key) {
+                try {
+                    return Execution.ok(runRunnerForKey(key));
+                } catch (BackingStoreException e) {
+                    return Execution.fail(e);
+                }
+            }
+        };
+        cache = CacheBuilder.newBuilder()
+                .expireAfterAccess(cacheTime, cacheTimeUnit)
+                .build(loader);
     }
 
-    private LoadingCache<String, String> getCache() {
+    private LoadingCache<String, Execution> getCache() {
         if (cache == null) {
             resetCache();
         }
@@ -81,13 +88,11 @@ public class HieraBackend {
      *
      * @return singleton of {@link HieraBackend}
      */
-    public static HieraBackend instance() {
-        synchronized (LOCK) {
-            if (inst == null || inst.disabled) {
-                inst = new HieraBackend();
-            }
-            return inst;
+    public synchronized static HieraBackend instance() {
+        if (inst == null || inst.disabled) {
+            inst = new HieraBackend();
         }
+        return inst;
     }
 
     /**
@@ -128,18 +133,60 @@ public class HieraBackend {
      * Gets value from hiera but returns default value if not found
      *
      * @param key the key to search for
-     * @param defaultValue the value to return if not found
      * @return founded value
-     * @throws BackingStoreException thrown if error occurd
      */
-    public String get(final String key, final String defaultValue) throws BackingStoreException {
-        Execution exec = get(key);
-        return exec.isOk ? exec.result : defaultValue;
+    public String get(final String key) throws BackingStoreException {
+        Execution exec = getExecution(key);
+        if (!exec.isOk) {
+            throw backingStoreException(exec);
+        }
+        return exec.result;
     }
 
-    private String runRunnerForKey(final String key) throws KeyNotFoundException, BackingStoreException {
+    private BackingStoreException backingStoreException(Execution exec) {
+        Throwable cause;
+        if (exec.cause != null) {
+            cause = exec.cause;
+        } else {
+            cause = new BackingStoreException(exec.result);
+        }
+        BackingStoreException ex;
+        if (cause instanceof BackingStoreException) {
+            ex = BackingStoreException.class.cast(cause);
+        } else {
+            ex = new BackingStoreException(cause);
+        }
+        return ex;
+    }
+
+    /**
+     * Gets value from hiera
+     *
+     * @param key the key to search for
+     * @return founded value
+     */
+    protected Execution getExecution(final String key) {
+        return tryToExecute(new EidPreconditions.UnsafeSupplier<Execution>() {
+            @Override
+            public Execution get() throws ExecutionException {
+                return getInsecurely(key);
+            }
+        }, "20151129:135500");
+    }
+
+    private Execution getInsecurely(String key) throws ExecutionException {
+        final Execution execution = getCache().get(key);
+        String resolvedValue = execution.result;
+        Execution returnExec = execution;
+        if (resolvedValue == null || "nil".equals(resolvedValue) || "null".equals(resolvedValue)) {
+            returnExec = Execution.fail();
+        }
+        return returnExec;
+    }
+
+    private String runRunnerForKey(final String key) throws BackingStoreException {
         ensureIsSecureKey(key);
-        String command = String.format(executable, key);
+        String[] command = new String[]{ executable, key };
         return runner.run(command).trim();
     }
 
@@ -148,47 +195,27 @@ public class HieraBackend {
         checkArgument(key.matches("^[a-zA-Z0-9.,_+=:-]+$"), "20151127:164119");
     }
 
-    /**
-     * Gets value from hiera
-     *
-     * @param key the key to search for
-     * @return founded value
-     * @throws BackingStoreException thrown if error occurd
-     */
-    protected Execution get(final String key) throws BackingStoreException {
-        try {
-            return getInsecurely(key);
-        } catch (ExecutionException ex) {
-            throw new BackingStoreException(ex);
-        }
-    }
-
-    private Execution getInsecurely(String key) throws ExecutionException {
-        final String ret = getCache().get(key);
-        Execution execution;
-        if (ret == null || "nil".equals(ret) || "null".equals(ret)) {
-            execution = Execution.fail();
-        } else {
-            execution = Execution.ok(ret);
-        }
-        return execution;
-    }
-
     protected static class Execution {
         protected final String result;
         protected final boolean isOk;
+        protected final Throwable cause;
 
-        private Execution(String result, boolean isOk) {
+        private Execution(String result, boolean isOk, Throwable cause) {
             this.result = result;
             this.isOk = isOk;
+            this.cause = cause;
         }
 
         static Execution ok(String result) {
-            return new Execution(result, true);
+            return new Execution(result, true, null);
         }
 
         static Execution fail() {
-            return new Execution(null, false);
+            return new Execution(null, false, null);
+        }
+
+        static Execution fail(Throwable throwable) {
+            return new Execution(null, false, throwable);
         }
     }
 }

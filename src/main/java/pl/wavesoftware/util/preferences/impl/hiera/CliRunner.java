@@ -32,6 +32,6 @@ public interface CliRunner {
      * @return Executed output STDOUT
      * @throws BackingStoreException if error occurred
      */
-    String run(final String command) throws BackingStoreException, KeyNotFoundException;
+    String run(final String[] command) throws BackingStoreException;
 
 }

@@ -26,16 +26,15 @@ public class HieraBackendTest {
     }
 
     /**
-     * Test of get method, of class HieraBackend.
+     * Test of getExecution method, of class HieraBackend.
      */
     @Test
     public void testGet_String_String() throws Exception {
         String key = "samplekey";
-        String defaultValue = "val2";
         HieraBackend instance = HieraBackend.instance();
         String expResult = "val2";
         try {
-            String result = instance.get(key, defaultValue);
+            String result = instance.get(key);
             assertEquals(expResult, result);
             // if hiera is installed
         } catch (BackingStoreException bse) {
@@ -48,14 +47,14 @@ public class HieraBackendTest {
     }
 
     /**
-     * Test of get method, of class HieraBackend.
+     * Test of getExecution method, of class HieraBackend.
      */
     @Test
     public void testGet_String() throws Exception {
         String key = "production";
         HieraBackend instance = new HieraBackendMock();
         String expResult = "false";
-        HieraBackend.Execution execution = instance.get(key);
+        HieraBackend.Execution execution = instance.getExecution(key);
         assertTrue(execution.isOk);
         assertEquals(expResult, execution.result);
     }
@@ -66,7 +65,7 @@ public class HieraBackendTest {
             runner = new CliRunner() {
 
                 @Override
-                public String run(String command) throws KeyNotFoundException, BackingStoreException {
+                public String run(String[] command) throws BackingStoreException {
                     return "false";
                 }
             };

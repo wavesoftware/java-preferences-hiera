@@ -16,39 +16,64 @@
 
 package pl.wavesoftware.util.preferences.impl.hiera;
 
-import pl.wavesoftware.eid.utils.EidPreconditions;
+import lombok.RequiredArgsConstructor;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.Serializable;
 import java.nio.charset.Charset;
 import java.util.Scanner;
+import java.util.concurrent.TimeUnit;
 import java.util.prefs.BackingStoreException;
 
+import static pl.wavesoftware.eid.utils.EidPreconditions.UnsafeProcedure;
 import static pl.wavesoftware.eid.utils.EidPreconditions.tryToExecute;
 
 /**
  *
  * @author Krzysztof Suszyński <krzysztof.suszynski@wavesoftware.pl>
  */
-class DefaultCommandLineRunner implements CliRunner, Serializable {
+@RequiredArgsConstructor
+class DefaultCommandLineRunner implements CliRunner {
 
-    private static final long serialVersionUID = 1L;
+    public static final int SYSTEM_SUCCESS = 0;
+    private final Runtime runtime;
+
+    protected DefaultCommandLineRunner() {
+        this.runtime = Runtime.getRuntime();
+    }
 
     @Override
-    public String run(final String command) throws BackingStoreException, KeyNotFoundException {
+    public String run(final String[] command) throws BackingStoreException {
         try {
-            final Process proc = Runtime.getRuntime().exec(command);
-            proc.waitFor();
-            if (proc.exitValue() != 0) {
-                throw new KeyNotFoundException();
+            final Process proc = runtime.exec(command);
+            waitForProc(proc);
+            String out = convertStreamToString(proc.getInputStream());
+            if (!isSuccessful(proc)) {
+                String error = convertStreamToString(proc.getErrorStream());
+                String message = makeErrorMessage(error, proc);
+                throw new BackingStoreException(message);
             }
-            return convertStreamToString(proc.getInputStream());
-        } catch (IOException e) {
-            throw new KeyNotFoundException(e);
-        } catch (InterruptedException ex) {
+            return out;
+        } catch (IOException ex) {
             throw new BackingStoreException(ex);
         }
+    }
+
+    private static String makeErrorMessage(String error, Process proc) {
+        return String.format("[%d] %s", proc.exitValue(), error);
+    }
+
+    private static boolean isSuccessful(final Process proc) {
+        return proc.exitValue() == SYSTEM_SUCCESS;
+    }
+
+    private static void waitForProc(final Process proc) {
+        tryToExecute(new UnsafeProcedure() {
+            @Override
+            public void execute() throws InterruptedException {
+                proc.waitFor(120L, TimeUnit.SECONDS);
+            }
+        }, "20151129:125832");
     }
 
     private static String convertStreamToString(final InputStream inputStream) {
@@ -56,7 +81,7 @@ class DefaultCommandLineRunner implements CliRunner, Serializable {
             final Scanner scanner = new Scanner(inputStream, Charset.defaultCharset().name()).useDelimiter("\\A");
             return scanner.hasNext() ? scanner.next() : "";
         } finally {
-            tryToExecute(new EidPreconditions.UnsafeProcedure() {
+            tryToExecute(new UnsafeProcedure() {
                 @Override
                 public void execute() throws IOException {
                     inputStream.close();

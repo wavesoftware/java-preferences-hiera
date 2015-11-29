@@ -74,14 +74,11 @@ public class HieraPreferences extends AbstractPreferences {
      * @return a found value or null if not found
      */
     private String getFromHiera(final String key) {
-        String ret = null;
         try {
-            ret = getBackend().get(key, null);
-        } catch (BackingStoreException ex) {
-            lastException = ex;
-            LOG.error("Hiera error", ex);
+            return getBackend().get(key);
+        } catch (BackingStoreException e) {
+            LOG.debug("20151129:232048", e);
         }
-        return ret;
     }
 
     @Override

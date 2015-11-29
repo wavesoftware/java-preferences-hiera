@@ -55,7 +55,7 @@ public class HieraPreferencesFactoryTest implements Serializable {
         HieraBackend.instance().runner = new CliRunner() {
 
             @Override
-            public String run(final String command) throws KeyNotFoundException, BackingStoreException {
+            public String run(final String[] command) throws BackingStoreException {
                 runned++;
                 return "true";
             }
@@ -76,7 +76,7 @@ public class HieraPreferencesFactoryTest implements Serializable {
         HieraBackend.instance().runner = new CliRunner() {
 
             @Override
-            public String run(final String command) throws KeyNotFoundException, BackingStoreException {
+            public String run(final String[] command) throws BackingStoreException {
                 runned++;
                 return "true";
             }
